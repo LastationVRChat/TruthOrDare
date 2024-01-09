@@ -23,11 +23,10 @@ namespace Lastation.TOD
             _player = Networking.LocalPlayer;
         }
 
-        public void OnClicked()
+        public void OnClick()
         {
             if (UIController._IsMasterLocked && !_player.isMaster) return;
             UIController.LoadSetDataContainer(assignedSet);
-            //loads the set data for this button instance into the UI
         }
 
         //sets the container this button is for on start()

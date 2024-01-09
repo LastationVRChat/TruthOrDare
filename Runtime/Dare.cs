@@ -9,10 +9,15 @@ namespace Lastation.TOD
     public class Dare : UdonSharpBehaviour
     {
         [SerializeField] private GameManager _gameManager;
-        
+        private VRCPlayerApi _player;
+
         public override void Interact()
         {
+            Debug.LogError("Dare Start");
+            _player = Networking.LocalPlayer;
+            Networking.SetOwner(_player, gameObject);
             _gameManager.Dare();
+            Debug.LogError("Dare End");
         }
     }
 }

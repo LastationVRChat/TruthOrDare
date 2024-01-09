@@ -30,6 +30,7 @@ namespace Lastation.TOD
         [SerializeField] private Transform _buttonParent;
         [SerializeField] private GameObject _buttonPrefab;
         private Button[] _SetButtons;
+        [SerializeField] private Button _masterLockButton;
 
         [Space]
 
@@ -62,7 +63,6 @@ namespace Lastation.TOD
                 _SetButtons[i] = _setContainers[i].SetButton.GetComponent<Button>();
             }
             #endregion Button Caching
-            VRCStringDownloader.LoadUrl(defaultURL, (IUdonEventReceiver)this);
         }
 
         public override void OnPlayerJoined(VRCPlayerApi player)
@@ -78,6 +78,7 @@ namespace Lastation.TOD
         private void MasterSwitch()
         {
             _IsMasterLocked = !_IsMasterLocked;
+            RequestSerialization();
         }
         #endregion Start, Master & Serialization
 

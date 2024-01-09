@@ -55,6 +55,7 @@ namespace Lastation.TOD
         #region Truth
         public void Truth()
         {
+            Debug.LogError("Truth On GameManager");
             Networking.SetOwner(_player, gameObject);
             _playerID = _player.playerId;
 
@@ -83,6 +84,7 @@ namespace Lastation.TOD
         #region Dare
         public void Dare()
         {
+            Debug.LogError("Dare On GameManager");
             Networking.SetOwner(_player, gameObject);
             _playerID = _player.playerId;
 
