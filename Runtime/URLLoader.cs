@@ -22,7 +22,7 @@ namespace Lastation.TOD
         [Space]
 
         [Header("Game Instance")]
-        public GameManager gameManager;
+        public GameManagerV2 gameManager;
 
         [Space]
 

@@ -22,7 +22,7 @@ namespace Lastation.TOD
         }
 
         [Header("Required Udon")]
-        [SerializeField] private GameManager gameManager;
+        [SerializeField] private GameManagerV2 gameManager;
         [Space]
 
         [SerializeField] private GameObject joinButton;

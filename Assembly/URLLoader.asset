@@ -128,7 +128,7 @@ MonoBehaviour:
       Data: 8|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: Lastation.TOD.GameManager, Assembly-CSharp
+      Data: Lastation.TOD.GameManagerV2, Assembly-CSharp
     - Name: 
       Entry: 8
       Data: 

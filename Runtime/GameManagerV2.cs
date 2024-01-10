@@ -8,15 +8,15 @@ using Random = UnityEngine.Random;
 
 namespace Lastation.TOD
 {
-    
+
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
-    public class GameManager : UdonSharpBehaviour
+    public class GameManagerV2 : UdonSharpBehaviour
     {
         #region Variables & Data
 
         [SerializeField] private PlayerManager playerManager;
 
-        [Space] 
+        [Space]
 
         [Header("Displays")]
         [SerializeField] public TextMeshProUGUI questionDisplayedText;
@@ -24,7 +24,7 @@ namespace Lastation.TOD
 
         [Space]
 
-        [Header("Game Settings")] 
+        [Header("Game Settings")]
         [SerializeField] private bool usePlaceholders;
         [SerializeField] public bool getAllPlayers;
         [SerializeField] private string playerPlaceholder = "<player>";
@@ -40,7 +40,7 @@ namespace Lastation.TOD
         private int _id;
 
         // Synced Data
-        [UdonSynced]private string _question;
+        [UdonSynced] private string _question;
         [UdonSynced] public int _playerID = -1;
 
         #endregion Variables & Data
