@@ -13,7 +13,7 @@ namespace Lastation.TOD
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
     public class PlayerManager : UdonSharpBehaviour
     {
-        public int PlayerCount
+        public int PlayerCount //number of players opted in
         {
             get
             {
@@ -52,6 +52,7 @@ namespace Lastation.TOD
                 _templateNames[i] = templates[i].GetComponentInChildren<TextMeshProUGUI>();
             }
 
+            _playersList = new[] { -1 };
             _players = new[] { -1 };
             _player = Networking.LocalPlayer;
         }
