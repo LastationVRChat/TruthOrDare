@@ -159,6 +159,7 @@ namespace Lastation.TOD
 
         public override void OnDeserialization()
         {
+            if (!Utilities.IsValid(VRCPlayerApi.GetPlayerById(_playerID))) return;
             playerDisplayedText.text = VRCPlayerApi.GetPlayerById(_playerID).displayName;
             questionDisplayedText.text = _question;
         }
