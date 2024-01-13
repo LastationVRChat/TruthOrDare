@@ -12,9 +12,7 @@ namespace Lastation.TOD
         public string eventName;
         public override void Interact()
         {
-            Debug.LogError("Button Start");
             _gameManager.SendCustomEvent(eventName);
-            Debug.LogError("Button End");
         }
     }
 }

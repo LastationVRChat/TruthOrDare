@@ -30,19 +30,23 @@ namespace Lastation.TOD
         [SerializeField] private Transform _buttonParent;
         [SerializeField] private GameObject _buttonPrefab;
         private Button[] _SetButtons;
-        [SerializeField] private Button _masterLockButton;
 
         [Space]
 
         [Header("URL Input")]
         [SerializeField] private VRCUrl defaultURL;
         [SerializeField] private VRCUrlInputField _urlInputField;
+        [SerializeField] private Toggle _masterLockToggle;
 
         [Space]
 
         [Header("Loaded Set Info")]
-        [SerializeField] private TextMeshProUGUI _setname;
-        [SerializeField] private TextMeshProUGUI _setby;
+        [SerializeField] private TextMeshProUGUI _setName;
+        [SerializeField] private TextMeshProUGUI _setBy;
+        [SerializeField] private TextMeshProUGUI _truthCount;
+        [SerializeField] private TextMeshProUGUI _playerTruthCount;
+        [SerializeField] private TextMeshProUGUI _dareCount;
+        [SerializeField] private TextMeshProUGUI _playerDareCount;
 
         //Private & Synced Variables
         private VRCPlayerApi _player;
@@ -72,6 +76,7 @@ namespace Lastation.TOD
 
         public override void OnDeserialization()
         {
+            _masterLockToggle.isOn = _IsMasterLocked;
             LoadURL(_tempUrl);
         }
 
@@ -141,8 +146,12 @@ namespace Lastation.TOD
                 result.DataDictionary.TryGetValue("Player_Dares", out DataToken pDares);
 
 
-                _setname.text = name.String;
-                _setby.text = setBy.String;
+                _setName.text = name.String;
+                _setBy.text = setBy.String;
+                _truthCount.text = truths.DataList.Count.ToString();
+                _playerTruthCount.text = pTruths.DataList.Count.ToString();
+                _dareCount.text = dares.DataList.Count.ToString();
+                _playerDareCount.text = pDares.DataList.Count.ToString();
 
                 //all tokens below are datalists of x items
                 gameManager._truths = truths.DataList;
