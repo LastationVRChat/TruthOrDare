@@ -17,7 +17,7 @@ namespace Lastation.TOD
     public class URLLoader : UdonSharpBehaviour
     {
         #region Variables & Data
-        [SerializeField] private TODSetContainer[] _setContainers;
+        [SerializeField] private TODDeckContainer[] _setContainers;
 
         [Space]
 
@@ -29,7 +29,7 @@ namespace Lastation.TOD
         [Header("Button Instancing")]
         [SerializeField] private Transform _buttonParent;
         [SerializeField] private GameObject _buttonPrefab;
-        private Button[] _SetButtons;
+        private Button[] _presetButtons;
 
         [Space]
 
@@ -41,17 +41,17 @@ namespace Lastation.TOD
         [Space]
 
         [Header("Loaded Set Info")]
-        [SerializeField] private TextMeshProUGUI _setName;
-        [SerializeField] private TextMeshProUGUI _setBy;
+        [SerializeField] private TextMeshProUGUI _deckName;
+        [SerializeField] private TextMeshProUGUI _deckBy;
         [SerializeField] private TextMeshProUGUI _truthCount;
         [SerializeField] private TextMeshProUGUI _playerTruthCount;
         [SerializeField] private TextMeshProUGUI _dareCount;
         [SerializeField] private TextMeshProUGUI _playerDareCount;
 
-        //Private & Synced Variables
+        //Internal & Synced Variables
         private VRCPlayerApi _player;
         [UdonSynced] public bool _IsMasterLocked = true;
-        [UdonSynced] private VRCUrl _tempUrl;
+        [UdonSynced] private VRCUrl _LoadedURL;
 
         #endregion Variables & Data
 
@@ -61,10 +61,10 @@ namespace Lastation.TOD
             _player = Networking.LocalPlayer;
             GenerateButtons();
             #region Button Caching
-            _SetButtons = new Button[_setContainers.Length];
+            _presetButtons = new Button[_setContainers.Length];
             for (int i = 0; i < _setContainers.Length; i++)
             {
-                _SetButtons[i] = _setContainers[i].SetButton.GetComponent<Button>();
+                _presetButtons[i] = _setContainers[i].SetButton.GetComponent<Button>();
             }
             #endregion Button Caching
         }
@@ -77,7 +77,7 @@ namespace Lastation.TOD
         public override void OnDeserialization()
         {
             _masterLockToggle.isOn = _IsMasterLocked;
-            LoadURL(_tempUrl);
+            LoadURL(_LoadedURL);
         }
 
         private void MasterSwitch()
@@ -90,13 +90,13 @@ namespace Lastation.TOD
         #region Button Generation
         public void GenerateButtons()
         {
-            foreach (TODSetContainer containerInstance in _setContainers)
+            foreach (TODDeckContainer containerInstance in _setContainers)
             {
                 if (containerInstance.SetButton == null)
                 {
                     GameObject button = Instantiate(_buttonPrefab, _buttonParent);
-                    button.GetComponent<SetButton>().SetTODSetContainer(containerInstance);
-                    containerInstance.SetButton = button.GetComponent<SetButton>();
+                    button.GetComponent<DeckButton>().SetTODSetContainer(containerInstance);
+                    containerInstance.SetButton = button.GetComponent<DeckButton>();
                     button.SetActive(true);
                 }
             }
@@ -109,12 +109,12 @@ namespace Lastation.TOD
             VRCStringDownloader.LoadUrl(url, (IUdonEventReceiver)this);
         }
 
-        public void LoadSetDataContainer(TODSetContainer containerInstance)
+        public void LoadSetDataContainer(TODDeckContainer containerInstance)
         {
             Networking.SetOwner(_player, gameObject);
             SendCustomNetworkEvent(NetworkEventTarget.All, nameof(EnableRateLimit));
-            _tempUrl = containerInstance.VRCUrl;
-            LoadURL(_tempUrl);
+            _LoadedURL = containerInstance.presetDeckURL;
+            LoadURL(_LoadedURL);
             RequestSerialization();
         }
 
@@ -123,8 +123,8 @@ namespace Lastation.TOD
             if (_IsMasterLocked && !_player.isMaster) return;
             Networking.SetOwner(_player, gameObject);
             SendCustomNetworkEvent(NetworkEventTarget.All, nameof(EnableRateLimit));
-            _tempUrl = _urlInputField.GetUrl();
-            LoadURL(_tempUrl);
+            _LoadedURL = _urlInputField.GetUrl();
+            LoadURL(_LoadedURL);
             RequestSerialization();
         }
         #endregion URL Loading
@@ -138,16 +138,16 @@ namespace Lastation.TOD
             if (VRCJson.TryDeserializeFromJson(json, out DataToken result))
             {
                 //Currently a dictionaty with 6 items
-                result.DataDictionary.TryGetValue("SetName", out DataToken name);
-                result.DataDictionary.TryGetValue("SetBy", out DataToken setBy);
+                result.DataDictionary.TryGetValue("DeckName", out DataToken deckName);
+                result.DataDictionary.TryGetValue("DeckBy", out DataToken deckBy);
                 result.DataDictionary.TryGetValue("Truths", out DataToken truths);
                 result.DataDictionary.TryGetValue("Player_Truths", out DataToken pTruths);
                 result.DataDictionary.TryGetValue("Dares", out DataToken dares);
                 result.DataDictionary.TryGetValue("Player_Dares", out DataToken pDares);
 
 
-                _setName.text = name.String;
-                _setBy.text = setBy.String;
+                _deckName.text = deckName.String;
+                _deckBy.text = deckBy.String;
                 _truthCount.text = truths.DataList.Count.ToString();
                 _playerTruthCount.text = pTruths.DataList.Count.ToString();
                 _dareCount.text = dares.DataList.Count.ToString();
@@ -159,8 +159,8 @@ namespace Lastation.TOD
                 gameManager._dares = dares.DataList;
                 gameManager._pDares = pDares.DataList;
 
-                gameManager.playerDisplayedText.text = name.String;
-                gameManager.questionDisplayedText.text = "By " + setBy.String;
+                gameManager.playerDisplayedText.text = deckName.String;
+                gameManager.questionDisplayedText.text = "By " + deckBy.String;
 
                 SendCustomEventDelayedSeconds(nameof(DisableRateLimit), 10);
             }
@@ -179,18 +179,18 @@ namespace Lastation.TOD
         public void EnableRateLimit()
         {
             _urlInputField.interactable = false;
-            for (int i = 0; i < _SetButtons.Length; i++)
+            for (int i = 0; i < _presetButtons.Length; i++)
             {
-                _SetButtons[i].interactable = false;
+                _presetButtons[i].interactable = false;
             }
         }
 
         public void DisableRateLimit()
         {
             _urlInputField.interactable = true;
-            for (int i = 0; i < _SetButtons.Length; i++)
+            for (int i = 0; i < _presetButtons.Length; i++)
             {
-                _SetButtons[i].interactable = true;
+                _presetButtons[i].interactable = true;
             }
         }
 

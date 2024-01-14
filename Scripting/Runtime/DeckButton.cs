@@ -10,10 +10,10 @@ using VRC.Udon;
 namespace Lastation.TOD
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
-    public class SetButton : UdonSharpBehaviour
+    public class DeckButton : UdonSharpBehaviour
     {
         public URLLoader UIController;
-        public TODSetContainer assignedSet;
+        public TODDeckContainer assignedSet;
         public TextMeshProUGUI buttonText;
 
         private VRCPlayerApi _player;
@@ -30,10 +30,10 @@ namespace Lastation.TOD
         }
 
         //sets the container this button is for on start()
-        public void SetTODSetContainer(TODSetContainer InputWorldData)
+        public void SetTODSetContainer(TODDeckContainer InputWorldData)
         {
             assignedSet = InputWorldData;
-            buttonText.text = assignedSet.setName;
+            buttonText.text = assignedSet.presetDeckName;
         }
     }
 }
