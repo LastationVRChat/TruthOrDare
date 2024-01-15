@@ -67,11 +67,7 @@ namespace Lastation.TOD
                 _presetButtons[i] = _setContainers[i].SetButton.GetComponent<Button>();
             }
             #endregion Button Caching
-        }
-
-        public override void OnPlayerJoined(VRCPlayerApi player)
-        {
-            RequestSerialization();
+            LoadURL(defaultURL);
         }
 
         public override void OnDeserialization()
