@@ -29,6 +29,7 @@ namespace Lastation.TOD
         [Header("Button Instancing")]
         [SerializeField] private Transform _buttonParent;
         [SerializeField] private GameObject _buttonPrefab;
+        [SerializeField] private Button _nSFWButton;
         private Button[] _presetButtons;
 
         [Space]
@@ -47,6 +48,11 @@ namespace Lastation.TOD
         [SerializeField] private TextMeshProUGUI _playerTruthCount;
         [SerializeField] private TextMeshProUGUI _dareCount;
         [SerializeField] private TextMeshProUGUI _playerDareCount;
+
+        [Header("Error Handling")]
+        [SerializeField] private TextMeshProUGUI _statusText;
+        [SerializeField] private AudioSource _uIAudioSource;
+        [SerializeField] private AudioClip _errorClip;
 
         //Internal & Synced Variables
         private VRCPlayerApi _player;
@@ -78,6 +84,11 @@ namespace Lastation.TOD
 
         private void MasterSwitch()
         {
+            if (_IsMasterLocked && !_player.isMaster)
+            {
+                Error("MasterLocked");
+                return;
+            }
             _IsMasterLocked = !_IsMasterLocked;
             RequestSerialization();
         }
@@ -94,9 +105,23 @@ namespace Lastation.TOD
                     button.GetComponent<DeckButton>().SetTODSetContainer(containerInstance);
                     containerInstance.SetButton = button.GetComponent<DeckButton>();
                     button.SetActive(true);
+                    if (containerInstance.isNSFW) button.SetActive(false);
                 }
             }
         }
+
+        public void ToggleNSFW()
+        {
+            _nSFWButton.interactable = false;
+            foreach (TODDeckContainer containerInstance in _setContainers)
+            {
+                if (containerInstance.isNSFW)
+                {
+                    containerInstance.SetButton.gameObject.SetActive(true);
+                }
+            }
+        }
+
         #endregion Button Generation
 
         #region URL Loading
@@ -116,7 +141,11 @@ namespace Lastation.TOD
 
         public void RequestURL()
         {
-            if (_IsMasterLocked && !_player.isMaster) return;
+            if (_IsMasterLocked && !_player.isMaster)
+            {
+                Error("MasterLocked");
+                return;
+            }
             Networking.SetOwner(_player, gameObject);
             SendCustomNetworkEvent(NetworkEventTarget.All, nameof(EnableRateLimit));
             _LoadedURL = _urlInputField.GetUrl();
@@ -165,6 +194,7 @@ namespace Lastation.TOD
 
         public override void OnStringLoadError(IVRCStringDownload WebRequest)
         {
+            Error("LoadError");
             gameManager.playerDisplayedText.text = "Error " + WebRequest.ErrorCode.ToString();
             gameManager.questionDisplayedText.text = WebRequest.Error;
             SendCustomEventDelayedSeconds(nameof(DisableRateLimit), 10);
@@ -191,6 +221,23 @@ namespace Lastation.TOD
         }
 
         #endregion Rate Limiting
+
+        public void Error(string status)
+        {
+            switch (status)
+            {
+                case "MasterLocked":
+                    _statusText.text = "[MasterLocked] Only instance master can currently do this.";
+                    _statusText.color = Color.red;
+                    _uIAudioSource.PlayOneShot(_errorClip);
+                    break;
+                case "LoadError":
+                    _statusText.text = "Failed to Load JSON!";
+                    _statusText.color = Color.red;
+                    _uIAudioSource.PlayOneShot(_errorClip);
+                    break;
+            }
+        }
     }
 
 }

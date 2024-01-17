@@ -11,6 +11,7 @@ namespace Lastation.TOD
     {
         public string presetDeckName; //set in inspector to gen the button name
         public VRCUrl presetDeckURL; //address of the json file
+        public bool isNSFW; //is the deck NSFW?
 
         [HideInInspector] public DeckButton SetButton;
     }

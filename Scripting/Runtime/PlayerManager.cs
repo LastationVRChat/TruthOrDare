@@ -52,7 +52,6 @@ namespace Lastation.TOD
                 _templateNames[i] = templates[i].GetComponentInChildren<TextMeshProUGUI>();
             }
 
-            _playersList = new[] { -1 };
             _players = new[] { -1 };
             _player = Networking.LocalPlayer;
         }

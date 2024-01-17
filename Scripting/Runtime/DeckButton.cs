@@ -25,7 +25,11 @@ namespace Lastation.TOD
 
         public void OnClick()
         {
-            if (UIController._IsMasterLocked && !_player.isMaster) return;
+            if (UIController._IsMasterLocked && !_player.isMaster)
+            {
+                UIController.Error("MasterLocked");
+                return;
+            }
             UIController.LoadSetDataContainer(assignedSet);
         }
 
