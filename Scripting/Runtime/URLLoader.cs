@@ -37,7 +37,12 @@ namespace Lastation.TOD
         [Header("URL Input")]
         [SerializeField] private VRCUrl defaultURL;
         [SerializeField] private VRCUrlInputField _urlInputField;
+
+        [Space]
+
+        [Header("Master Lock")]
         [SerializeField] private Toggle _masterLockToggle;
+        [UdonSynced] public bool _IsMasterLocked = true;
 
         [Space]
 
@@ -56,7 +61,6 @@ namespace Lastation.TOD
 
         //Internal & Synced Variables
         private VRCPlayerApi _player;
-        [UdonSynced] public bool _IsMasterLocked = true;
         [UdonSynced] private VRCUrl _LoadedURL;
 
         #endregion Variables & Data
@@ -82,15 +86,18 @@ namespace Lastation.TOD
             LoadURL(_LoadedURL);
         }
 
-        private void MasterSwitch()
+        public void MasterSwitch()
         {
             if (_IsMasterLocked && !_player.isMaster)
             {
+                _masterLockToggle.isOn = _IsMasterLocked;
                 Error("MasterLocked");
                 return;
             }
             _IsMasterLocked = !_IsMasterLocked;
+            _masterLockToggle.isOn = _IsMasterLocked;
             RequestSerialization();
+            
         }
         #endregion Start, Master & Serialization
 
