@@ -1,0 +1,32 @@
+{
+    "DeckName": "Example Set",
+
+    "DeckBy": "Lastation Community",
+
+    "Truths": [
+        "What is your favorite VRC game Map?",
+        "What is your favorite food?",
+        "Why do you play VRC?",
+        "What are your plans for tonight?",
+        "Pineapple on pizza?"
+    ],
+    "Player_Truths": [
+        "What is your opinion of <player>?",
+        "What do you like about <player>'s avatar?",
+        "What are your thoughts about <player>'s voice?",
+        "Are you friends with <player>?",
+        "Name one thing you would want to do with <player>."
+    ],
+    "Dares": [
+        "Mute yourself until next turn.",
+        "Change to your least favorite avatar.",
+        "Pick a player to roll a dare on their next turn.",
+        "Post the latest image you have saved.",
+        "Drink a glass of water."
+    ],
+    "Player_Dares": [
+        "Kiss <player>.",
+        "Poke <player>'s nose.",
+        "Sit next to <player>."
+    ]
+}
