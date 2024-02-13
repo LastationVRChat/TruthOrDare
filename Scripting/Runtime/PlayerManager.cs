@@ -2,6 +2,7 @@
 using TMPro;
 using UdonSharp;
 using UnityEngine;
+using UnityEngine.UI;
 using VRC.SDK3.Data;
 using VRC.SDKBase;
 using VRC.Udon;
@@ -13,126 +14,123 @@ namespace Lastation.TOD
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
     public class PlayerManager : UdonSharpBehaviour
     {
-        public int PlayerCount //number of players opted in
-        {
-            get
-            {
-                return _playersList.Length;
-            }
-        }
-
-        [Header("Required Udon")]
+        #region Variables & Data
+        [Header("Script References")]
         [SerializeField] private GameManagerV2 gameManager;
-        [Space]
 
-        [SerializeField] private GameObject joinButton;
-        [SerializeField] private GameObject leaveButton;
-        [Space]
+        [Header("Button References")]
+        [SerializeField] private Button joinButton;
+        [SerializeField] private Button leaveButton;
+
+        [Header("Player Display")]
         public GameObject[] templates;
         private TextMeshProUGUI[] _templateNames;
-        #region Variables & Data
 
         // Synced Data
-        [UdonSynced] private int[] _players;
+        [UdonSynced] private int[] _joinedPlayerIDs;
 
         // Local Data
-        private VRCPlayerApi _player;
+        private VRCPlayerApi _localPlayer;
         private bool _isRateLimited;
-        private bool _hasJoined;
-        private int[] _playersList;
+        private int[] _nonLocalPlayers;
+        #endregion Variables & Data
 
-        #endregion
-
+        #region Start, RateLimit, GetRandomPlayer, and GetPlayerCount
         void Start()
         {
+            #region Cache References
             _templateNames = new TextMeshProUGUI[templates.Length];
-
             for (int i = 0; i < templates.Length; i++)
             {
                 _templateNames[i] = templates[i].GetComponentInChildren<TextMeshProUGUI>();
             }
+            #endregion Cache References
 
-            _players = new[] { -1 };
-            _player = Networking.LocalPlayer;
+            _joinedPlayerIDs = new[] { -1 };
+            _localPlayer = Networking.LocalPlayer;
         }
 
-        public void RateLimit() => _isRateLimited = false;
-
-        public void GetAllPlayers()
+        public int PlayerCount //number of players opted in
         {
-            VRCPlayerApi[] players = new VRCPlayerApi[VRCPlayerApi.GetPlayerCount()];
-            VRCPlayerApi.GetPlayers(players);
-
-            int[] playerIDs = new int[VRCPlayerApi.GetPlayerCount()];
-
-            for (var i = 0; i < players.Length; i++)
+            get
             {
-                playerIDs[i] = players[i].playerId;
+                return _nonLocalPlayers.Length;
             }
+        }
 
-            _players = playerIDs;
-            _UpdateList();
-            _UpdatePlayers();
+        public void RateLimit()
+        {
+            _isRateLimited = false;
+            joinButton.interactable = true;
+            leaveButton.interactable = true;
         }
 
         public string GetRandomPlayer()
         {
-            int randomIndex = Random.Range(0, _playersList.Length);
+            int randomIndex = Random.Range(0, _nonLocalPlayers.Length);
 
-            return VRCPlayerApi.GetPlayerById(_playersList[randomIndex]).displayName;
+            return VRCPlayerApi.GetPlayerById(_nonLocalPlayers[randomIndex]).displayName;
+        }
+        #endregion Start, RateLimit, GetRandomPlayer, and GetPlayerCount
+
+        #region Join & Leave
+
+        public void ButtonFlipper()
+        {
+            joinButton.gameObject.SetActive(!joinButton.gameObject.activeSelf);
+            leaveButton.gameObject.SetActive(!joinButton.gameObject.activeSelf);
         }
 
         public void Join()
         {
-            if (!Utilities.IsValid(_player) || _isRateLimited) return;
-            Networking.SetOwner(_player, gameObject);
-            _hasJoined = true;
+            if (!Utilities.IsValid(_localPlayer) || _isRateLimited) return;
+            Networking.SetOwner(_localPlayer, gameObject);
+
             _isRateLimited = true;
-
-            joinButton.SetActive(false);
-            leaveButton.SetActive(true);
-
+            ButtonFlipper();
+            leaveButton.interactable = false;
             SendCustomEventDelayedSeconds(nameof(RateLimit), 5);
 
-            Add(_player.playerId);
+            Add(_localPlayer.playerId);
         }
 
         public void Leave()
         {
-            if (!Utilities.IsValid(_player) || _isRateLimited) return;
-            Networking.SetOwner(_player, gameObject);
-            _hasJoined = false;
+            if (!Utilities.IsValid(_localPlayer) || _isRateLimited) return;
+            Networking.SetOwner(_localPlayer, gameObject);
+
             _isRateLimited = true;
-
-            leaveButton.SetActive(false);
-            joinButton.SetActive(true);
-
+            ButtonFlipper();
+            joinButton.interactable = false;
             SendCustomEventDelayedSeconds(nameof(RateLimit), 5);
 
-            Remove(_player.playerId);
+            Remove(_localPlayer.playerId);
         }
+        #endregion Join & Leave
 
+        #region Update nonLocalPlayers
         public void _UpdateList()
         {
-            if (_players.Length == 1) return;
+            if (_joinedPlayerIDs.Length == 1) return;
 
-            int[] _temp = new int[_players.Length - 1];
+            int[] _temp = new int[_joinedPlayerIDs.Length - 1];
 
             int j = 0;
 
-            for (int i = 0; i < _players.Length; i++)
+            for (int i = 0; i < _joinedPlayerIDs.Length; i++)
             {
-                if (_players[i] == _player.playerId) continue;
-                _temp[j++] = _players[i];
+                if (_joinedPlayerIDs[i] == _localPlayer.playerId) continue;
+                _temp[j++] = _joinedPlayerIDs[i];
             }
 
-            _playersList = _temp;
-            _UpdatePlayers();
+            _nonLocalPlayers = _temp;
         }
+        #endregion Update nonLocalPlayers
 
-        public void _UpdatePlayers()
+        #region Update Joined Player Display
+        public void _UpdateDisplay()
         {
-            if (_players[0] == -1)
+            if (_joinedPlayerIDs[0] == -1)
             {
                 foreach (GameObject Template in templates)
                 {
@@ -146,85 +144,80 @@ namespace Lastation.TOD
                 Template.SetActive(false);
             }
 
-            for (int i = 0; i < _players.Length; i++)
+            for (int i = 0; i < _joinedPlayerIDs.Length; i++)
             {
-                string playerName = _player.displayName;
+                string playerName = _localPlayer.displayName;
                 if (string.IsNullOrEmpty(playerName)) continue;
 
                 _templateNames[i].text = playerName;
                 templates[i].SetActive(true);
             }
         }
+        #endregion Update Joined Player Display
 
+        #region Deserialization & PlayerJoined
         public override void OnDeserialization()
         {
-            if (gameManager.getAllPlayers)
-            {
-                GetAllPlayers();
-            }
-            else
-            {
                 _UpdateList();
-                _UpdatePlayers();
-            }
+                _UpdateDisplay();
         }
 
         public override void OnPlayerJoined(VRCPlayerApi player)
         {
             RequestSerialization();
         }
+        #endregion Deserialization & PlayerJoined
 
         #region Add & Remove
-
         public void Add(int id)
         {
-            if (_players.Length == 1 && _players[0] == -1)
+            if (_joinedPlayerIDs.Length == 1 && _joinedPlayerIDs[0] == -1)
             {
-                _players[0] = id;
+                _joinedPlayerIDs[0] = id;
                 RequestSerialization();
                 _UpdateList();
-                _UpdatePlayers();
+                _UpdateDisplay();
             }
             else
             {
-                int[] _temp = new int[_players.Length + 1];
+                int[] _temp = new int[_joinedPlayerIDs.Length + 1];
 
-                Array.Copy(_players, _temp, _players.Length);
+                Array.Copy(_joinedPlayerIDs, _temp, _joinedPlayerIDs.Length);
 
                 _temp[_temp.Length - 1] = id;
 
-                _players = _temp;
+                _joinedPlayerIDs = _temp;
                 RequestSerialization();
                 _UpdateList();
-                _UpdatePlayers();
+                _UpdateDisplay();
             }
         }
 
         public void Remove(int id)
         {
-            if (_players.Length == 1 && _players[0] != -1)
+            if (_joinedPlayerIDs.Length == 1 && _joinedPlayerIDs[0] != -1)
             {
-                _players[0] = -1;
+                _joinedPlayerIDs[0] = -1;
                 RequestSerialization();
                 _UpdateList();
-                _UpdatePlayers();
+                _UpdateDisplay();
             }
             else
             {
-                int[] _temp = new int[_players.Length - 1];
+                int[] _temp = new int[_joinedPlayerIDs.Length - 1];
                 int g = 0;
 
-                for (int i = 0; i < _players.Length; i++)
+                for (int i = 0; i < _joinedPlayerIDs.Length; i++)
                 {
 
-                    if (_players[i] == id) continue;
-                    _temp[g++] = _players[i];
+                    if (_joinedPlayerIDs[i] == id) continue;
+                    _temp[g++] = _joinedPlayerIDs[i];
                 }
 
-                _players = _temp;
+                _joinedPlayerIDs = _temp;
                 RequestSerialization();
                 _UpdateList();
-                _UpdatePlayers();
+                _UpdateDisplay();
             }
         }
 

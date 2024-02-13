@@ -15,7 +15,7 @@ namespace Lastation.TOD
     public class URLLoader : UdonSharpBehaviour
     {
         #region Variables & Data
-        [SerializeField] private TODDeckContainer[] _setContainers;
+        [SerializeField] public TODDeckContainer[] _setContainers;
 
         [Space]
 
@@ -32,7 +32,7 @@ namespace Lastation.TOD
         [Space]
 
         [Header("URL Input")]
-        [SerializeField] private VRCUrl defaultURL;
+        [SerializeField] private VRCUrl _defaultURL;
         [SerializeField] private VRCUrlInputField _urlInputField;
 
         [Space]
@@ -56,14 +56,9 @@ namespace Lastation.TOD
         [SerializeField] private AudioSource _uIAudioSource;
         [SerializeField] private AudioClip _errorClip;
 
-        [Header("NSFW")]
-        [SerializeField] private GameObject _mainUi;
-        [SerializeField] private GameObject _nSFWUi;
-        [SerializeField] private Button _nSFWButton;
-
         //Internal & Synced Variables
         private VRCPlayerApi _player;
-        [UdonSynced] private VRCUrl _LoadedURL;
+        [UdonSynced] private VRCUrl _loadedURL;
 
         #endregion Variables & Data
 
@@ -79,13 +74,20 @@ namespace Lastation.TOD
                 _presetButtons[i] = _setContainers[i].SetButton.GetComponent<Button>();
             }
             #endregion Button Caching
-            LoadURL(defaultURL);
+            #region Default URL Loader
+            if (_loadedURL == null && _defaultURL != null)
+            {
+                _loadedURL = _defaultURL;
+                RequestSerialization();
+                LoadURL(_loadedURL);
+            }
+            #endregion Default URL Loader
         }
 
         public override void OnDeserialization()
-        {
+        {   
             _masterLockToggle.SetIsOnWithoutNotify(_IsMasterLocked);
-            LoadURL(_LoadedURL);
+            LoadURL(_loadedURL);
         }
 
         public void MasterSwitch()
@@ -130,8 +132,8 @@ namespace Lastation.TOD
         {
             Networking.SetOwner(_player, gameObject);
             SendCustomNetworkEvent(NetworkEventTarget.All, nameof(EnableRateLimit));
-            _LoadedURL = containerInstance.presetDeckURL;
-            LoadURL(_LoadedURL);
+            _loadedURL = containerInstance.presetDeckURL;
+            LoadURL(_loadedURL);
             RequestSerialization();
         }
 
@@ -144,8 +146,8 @@ namespace Lastation.TOD
             }
             Networking.SetOwner(_player, gameObject);
             SendCustomNetworkEvent(NetworkEventTarget.All, nameof(EnableRateLimit));
-            _LoadedURL = _urlInputField.GetUrl();
-            LoadURL(_LoadedURL);
+            _loadedURL = _urlInputField.GetUrl();
+            LoadURL(_loadedURL);
             RequestSerialization();
         }
         #endregion URL Loading
@@ -219,29 +221,6 @@ namespace Lastation.TOD
         }
 
         #endregion Rate Limiting
-
-        #region NSFW
-        public void ToggleNSFWUI()
-        {
-            _nSFWUi.SetActive(!_nSFWUi.activeSelf);
-            _mainUi.SetActive(!_mainUi.activeSelf);
-        }
-
-        public void ToggleNSFW()
-        {
-            foreach (TODDeckContainer containerInstance in _setContainers)
-            {
-                if (containerInstance.isNSFW)
-                {
-                    containerInstance.SetButton.gameObject.SetActive(true);
-                }
-            }
-            ToggleNSFWUI();
-            _nSFWButton.interactable = false;
-            StatusCode("NSFWUnlock");
-        }
-
-        #endregion NSFW
 
         #region Error Handling
         public void StatusCode(string status)

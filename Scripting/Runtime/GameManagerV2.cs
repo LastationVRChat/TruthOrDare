@@ -25,8 +25,6 @@ namespace Lastation.TOD
         [Space]
 
         [Header("Game Settings")]
-        [SerializeField] private bool usePlaceholders;
-        [SerializeField] public bool getAllPlayers;
         [SerializeField] private string playerPlaceholder = "<player>";
 
         // Truth & Dares
@@ -59,7 +57,7 @@ namespace Lastation.TOD
             Networking.SetOwner(_player, gameObject);
             _playerID = _player.playerId;
 
-            if (usePlaceholders && playerManager.PlayerCount >= 3)
+            if (playerManager.PlayerCount >= 3)
             {
                 switch (Chance())
                 {
@@ -88,7 +86,7 @@ namespace Lastation.TOD
             Networking.SetOwner(_player, gameObject);
             _playerID = _player.playerId;
 
-            if (usePlaceholders && playerManager.PlayerCount >= 3)
+            if (playerManager.PlayerCount >= 3)
             {
                 switch (Chance())
                 {
