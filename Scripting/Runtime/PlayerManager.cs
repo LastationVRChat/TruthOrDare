@@ -30,7 +30,7 @@ namespace Lastation.TOD
         [UdonSynced] private int[] _joinedPlayerIDs;
 
         // Local Data
-        private VRCPlayerApi _localPlayer;
+        private VRCPlayerApi _VRCplayer;
         private bool _isRateLimited;
         private int[] _nonLocalPlayers;
         #endregion Variables & Data
@@ -47,14 +47,14 @@ namespace Lastation.TOD
             #endregion Cache References
 
             _joinedPlayerIDs = new[] { -1 };
-            _localPlayer = Networking.LocalPlayer;
+            _VRCplayer = Networking.LocalPlayer;
         }
 
         public int PlayerCount //number of players opted in
         {
             get
             {
-                return _nonLocalPlayers.Length;
+                return _joinedPlayerIDs.Length;
             }
         }
 
@@ -83,28 +83,28 @@ namespace Lastation.TOD
 
         public void Join()
         {
-            if (!Utilities.IsValid(_localPlayer) || _isRateLimited) return;
-            Networking.SetOwner(_localPlayer, gameObject);
+            if (!Utilities.IsValid(_VRCplayer) || _isRateLimited) return;
+            Networking.SetOwner(_VRCplayer, gameObject);
 
             _isRateLimited = true;
             ButtonFlipper();
             leaveButton.interactable = false;
             SendCustomEventDelayedSeconds(nameof(RateLimit), 5);
 
-            Add(_localPlayer.playerId);
+            Add(_VRCplayer.playerId);
         }
 
         public void Leave()
         {
-            if (!Utilities.IsValid(_localPlayer) || _isRateLimited) return;
-            Networking.SetOwner(_localPlayer, gameObject);
+            if (!Utilities.IsValid(_VRCplayer) || _isRateLimited) return;
+            Networking.SetOwner(_VRCplayer, gameObject);
 
             _isRateLimited = true;
             ButtonFlipper();
             joinButton.interactable = false;
             SendCustomEventDelayedSeconds(nameof(RateLimit), 5);
 
-            Remove(_localPlayer.playerId);
+            Remove(_VRCplayer.playerId);
         }
         #endregion Join & Leave
 
@@ -119,7 +119,7 @@ namespace Lastation.TOD
 
             for (int i = 0; i < _joinedPlayerIDs.Length; i++)
             {
-                if (_joinedPlayerIDs[i] == _localPlayer.playerId) continue;
+                if (_joinedPlayerIDs[i] == _VRCplayer.playerId) continue;
                 _temp[j++] = _joinedPlayerIDs[i];
             }
 
@@ -146,7 +146,7 @@ namespace Lastation.TOD
 
             for (int i = 0; i < _joinedPlayerIDs.Length; i++)
             {
-                string playerName = _localPlayer.displayName;
+                string playerName = _VRCplayer.displayName;
                 if (string.IsNullOrEmpty(playerName)) continue;
 
                 _templateNames[i].text = playerName;
