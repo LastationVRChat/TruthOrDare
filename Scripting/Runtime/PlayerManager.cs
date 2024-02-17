@@ -30,7 +30,7 @@ namespace Lastation.TOD
         [UdonSynced] private int[] _joinedPlayerIDs;
 
         // Local Data
-        private VRCPlayerApi _VRCplayer;
+        private VRCPlayerApi _LocalPlayer;
         private bool _isRateLimited;
         private int[] _nonLocalPlayers;
         #endregion Variables & Data
@@ -47,7 +47,7 @@ namespace Lastation.TOD
             #endregion Cache References
 
             _joinedPlayerIDs = new[] { -1 };
-            _VRCplayer = Networking.LocalPlayer;
+            _LocalPlayer = Networking.LocalPlayer;
         }
 
         public int PlayerCount //number of players opted in
@@ -83,33 +83,33 @@ namespace Lastation.TOD
 
         public void Join()
         {
-            if (!Utilities.IsValid(_VRCplayer) || _isRateLimited) return;
-            Networking.SetOwner(_VRCplayer, gameObject);
+            if (!Utilities.IsValid(_LocalPlayer) || _isRateLimited) return;
+            Networking.SetOwner(_LocalPlayer, gameObject);
 
             _isRateLimited = true;
             ButtonFlipper();
             leaveButton.interactable = false;
             SendCustomEventDelayedSeconds(nameof(RateLimit), 5);
 
-            Add(_VRCplayer.playerId);
+            Add(_LocalPlayer.playerId);
         }
 
         public void Leave()
         {
-            if (!Utilities.IsValid(_VRCplayer) || _isRateLimited) return;
-            Networking.SetOwner(_VRCplayer, gameObject);
+            if (!Utilities.IsValid(_LocalPlayer) || _isRateLimited) return;
+            Networking.SetOwner(_LocalPlayer, gameObject);
 
             _isRateLimited = true;
             ButtonFlipper();
             joinButton.interactable = false;
             SendCustomEventDelayedSeconds(nameof(RateLimit), 5);
 
-            Remove(_VRCplayer.playerId);
+            Remove(_LocalPlayer.playerId);
         }
         #endregion Join & Leave
 
         #region Update nonLocalPlayers
-        public void _UpdateList()
+        public void _UpdateList() //updates the nonLocalPlayers array
         {
             if (_joinedPlayerIDs.Length == 1) return;
 
@@ -119,7 +119,7 @@ namespace Lastation.TOD
 
             for (int i = 0; i < _joinedPlayerIDs.Length; i++)
             {
-                if (_joinedPlayerIDs[i] == _VRCplayer.playerId) continue;
+                if (_joinedPlayerIDs[i] == _LocalPlayer.playerId) continue;
                 _temp[j++] = _joinedPlayerIDs[i];
             }
 
@@ -146,7 +146,7 @@ namespace Lastation.TOD
 
             for (int i = 0; i < _joinedPlayerIDs.Length; i++)
             {
-                string playerName = _VRCplayer.displayName;
+                string playerName = _LocalPlayer.displayName;
                 if (string.IsNullOrEmpty(playerName)) continue;
 
                 _templateNames[i].text = playerName;
@@ -165,6 +165,35 @@ namespace Lastation.TOD
         public override void OnPlayerJoined(VRCPlayerApi player)
         {
             RequestSerialization();
+        }
+
+        public override void OnPlayerLeft(VRCPlayerApi player)
+        {
+            int id = player.playerId;
+            if (_joinedPlayerIDs.Length == 1 && _joinedPlayerIDs[0] != -1)
+            {
+                _joinedPlayerIDs[0] = -1;
+                RequestSerialization();
+                _UpdateList();
+                _UpdateDisplay();
+            }
+            else
+            {
+                int[] _temp = new int[_joinedPlayerIDs.Length - 1];
+                int g = 0;
+
+                for (int i = 0; i < _joinedPlayerIDs.Length; i++)
+                {
+
+                    if (_joinedPlayerIDs[i] == id) continue;
+                    _temp[g++] = _joinedPlayerIDs[i];
+                }
+
+                _joinedPlayerIDs = _temp;
+                RequestSerialization();
+                _UpdateList();
+                _UpdateDisplay();
+            }
         }
         #endregion Deserialization & PlayerJoined
 
