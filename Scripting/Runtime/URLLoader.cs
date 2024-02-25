@@ -47,9 +47,7 @@ namespace Lastation.TOD
         [SerializeField] private TextMeshProUGUI _deckName;
         [SerializeField] private TextMeshProUGUI _deckBy;
         [SerializeField] private TextMeshProUGUI _truthCount;
-        [SerializeField] private TextMeshProUGUI _playerTruthCount;
         [SerializeField] private TextMeshProUGUI _dareCount;
-        [SerializeField] private TextMeshProUGUI _playerDareCount;
 
         [Header("StatusCode Handling")]
         [SerializeField] private TextMeshProUGUI _statusText;
@@ -164,23 +162,17 @@ namespace Lastation.TOD
                 result.DataDictionary.TryGetValue("DeckName", out DataToken deckName);
                 result.DataDictionary.TryGetValue("DeckBy", out DataToken deckBy);
                 result.DataDictionary.TryGetValue("Truths", out DataToken truths);
-                result.DataDictionary.TryGetValue("Player_Truths", out DataToken pTruths);
                 result.DataDictionary.TryGetValue("Dares", out DataToken dares);
-                result.DataDictionary.TryGetValue("Player_Dares", out DataToken pDares);
 
 
                 _deckName.text = deckName.String;
                 _deckBy.text = deckBy.String;
                 _truthCount.text = truths.DataList.Count.ToString();
-                _playerTruthCount.text = pTruths.DataList.Count.ToString();
                 _dareCount.text = dares.DataList.Count.ToString();
-                _playerDareCount.text = pDares.DataList.Count.ToString();
 
                 //all tokens below are datalists of x items
                 gameManager._truths = truths.DataList;
-                gameManager._pTruths = pTruths.DataList;
                 gameManager._dares = dares.DataList;
-                gameManager._pDares = pDares.DataList;
 
                 gameManager.playerDisplayedText.text = deckName.String;
                 gameManager.questionDisplayedText.text = "By " + deckBy.String;

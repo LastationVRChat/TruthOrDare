@@ -25,13 +25,16 @@ namespace Lastation.TOD
         [Space]
 
         [Header("Game Settings")]
-        [SerializeField] private string playerPlaceholder = "<player>";
+        [SerializeField] private string randomPlayer = "<player>";
+        [SerializeField] private string localPlayer = "<local>";
+        [SerializeField] private string range1 = "<range1>"; // 1-5
+        [SerializeField] private string range2 = "<range2>"; // 1-10
+        [SerializeField] private string range3 = "<range3>"; //10-25
+
 
         // Truth & Dares
         [HideInInspector] public DataList _truths = new DataList();
         [HideInInspector] public DataList _dares = new DataList();
-        [HideInInspector] public DataList _pTruths = new DataList();
-        [HideInInspector] public DataList _pDares = new DataList();
 
         // Game Logic & Local Player
         private VRCPlayerApi _player;
@@ -53,76 +56,26 @@ namespace Lastation.TOD
         #region Truth
         public void Truth()
         {
-            Debug.LogError("Truth On GameManager");
             Networking.SetOwner(_player, gameObject);
             _playerID = _player.playerId;
 
-            if (playerManager.PlayerCount >= 3)
-            {
-                switch (Chance())
-                {
-                    case false:
-                        _id = Random.Range(0, _truths.Count);
-                        SetQuestion(1);
-                        break;
-                    case true:
-                        _id = Random.Range(0, _pTruths.Count);
-                        SetQuestion(2);
-                        break;
-                }
-            }
-            else
-            {
-                _id = Random.Range(0, _truths.Count);
-                SetQuestion(1);
-            }
+            _id = Random.Range(0, _truths.Count);
+            SetQuestion(1);
         }
         #endregion Truth
 
         #region Dare
         public void Dare()
         {
-            Debug.LogError("Dare On GameManager");
             Networking.SetOwner(_player, gameObject);
             _playerID = _player.playerId;
 
-            if (playerManager.PlayerCount >= 3)
-            {
-                switch (Chance())
-                {
-                    case false:
-                        _id = Random.Range(0, _dares.Count);
-                        SetQuestion(3);
-                        break;
-                    case true:
-                        _id = Random.Range(0, _pDares.Count);
-                        SetQuestion(4);
-                        break;
-                }
-            }
-            else
-            {
-                _id = Random.Range(0, _dares.Count);
-                SetQuestion(3);
-            }
+            _id = Random.Range(0, _dares.Count);
+            SetQuestion(2);
         }
         #endregion Dare
 
-        #region Chance and Set Question
-        private bool Chance()
-        {
-            int chance = Random.Range(1, 2);
-
-            switch (chance)
-            {
-                case 1:
-                    return false;
-                case 2:
-                    return true;
-            }
-
-            return false;
-        }
+        #region Set Question
 
         private void SetQuestion(int value)
         {
@@ -130,22 +83,34 @@ namespace Lastation.TOD
             {
                 case 1:
                     _question = _truths[_id].String;
+                    if (_question.Contains(randomPlayer) && playerManager.PlayerCount >= 3) _question = _question.Replace(randomPlayer, playerManager.GetRandomPlayer());
+                    else if (playerManager.PlayerCount < 3 && _question.Contains(randomPlayer))
+                    {
+                        Truth();
+                        Debug.Log("Truth was forced by playermanager");
+                    }
+                    if (_question.Contains(localPlayer)) _question = _question.Replace(localPlayer, _player.displayName);
+                    if (_question.Contains(range1)) _question = _question.Replace(range1, Random.Range(1, 5).ToString());
+                    if (_question.Contains(range2)) _question = _question.Replace(range2, Random.Range(1, 10).ToString());
+                    if (_question.Contains(range3)) _question = _question.Replace(range3, Random.Range(10, 25).ToString());
                     break;
                 case 2:
-                    _question = _pTruths[_id].String;
-                    _question.Replace(playerPlaceholder, playerManager.GetRandomPlayer());
-                    break;
-                case 3:
                     _question = _dares[_id].String;
-                    break;
-                case 4:
-                    _question = _pDares[_id].String;
-                    _question.Replace(playerPlaceholder, playerManager.GetRandomPlayer());
+                    if (_question.Contains(randomPlayer) && playerManager.PlayerCount >= 3) _question = _question.Replace(randomPlayer, playerManager.GetRandomPlayer());
+                    else if (playerManager.PlayerCount < 3 && _question.Contains(randomPlayer))
+                    {
+                        Dare();
+                        Debug.Log("Dare was forced by playermanager");
+                    }
+                    if (_question.Contains(localPlayer)) _question = _question.Replace(localPlayer, _player.displayName);
+                    if (_question.Contains(range1)) _question = _question.Replace(range1, Random.Range(1, 5).ToString());
+                    if (_question.Contains(range2)) _question = _question.Replace(range2, Random.Range(1, 10).ToString());
+                    if (_question.Contains(range3)) _question = _question.Replace(range3, Random.Range(10, 25).ToString());
                     break;
             }
             _UpdateQuestion();
         }
-        #endregion Chance and Set Question
+        #endregion Set Question
 
         #region Update Question and Serialization
         private void _UpdateQuestion()
