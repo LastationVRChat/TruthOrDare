@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using System;
+using TMPro;
 using UdonSharp;
 using UnityEngine;
 using VRC.SDK3.Data;
@@ -27,9 +28,7 @@ namespace Lastation.TOD
         [Header("Game Settings")]
         [SerializeField] private string randomPlayer = "<player>";
         [SerializeField] private string localPlayer = "<local>";
-        [SerializeField] private string range1 = "<range1>"; // 1-5
-        [SerializeField] private string range2 = "<range2>"; // 1-10
-        [SerializeField] private string range3 = "<range3>"; //10-25
+        [SerializeField] private string range = "<range[";
 
 
         // Truth & Dares
@@ -39,6 +38,12 @@ namespace Lastation.TOD
         // Game Logic & Local Player
         private VRCPlayerApi _player;
         private int _id;
+
+        //range Data
+        private int startRange;
+        private int endRange;
+        private int value;
+        private int startIndex;
 
         // Synced Data
         [UdonSynced] private string _question;
@@ -75,7 +80,7 @@ namespace Lastation.TOD
         }
         #endregion Dare
 
-        #region Set Question
+        #region Set Question & Range Processing
 
         private void SetQuestion(int value)
         {
@@ -90,9 +95,7 @@ namespace Lastation.TOD
                         Debug.Log("Truth was forced by playermanager");
                     }
                     if (_question.Contains(localPlayer)) _question = _question.Replace(localPlayer, _player.displayName);
-                    if (_question.Contains(range1)) _question = _question.Replace(range1, Random.Range(1, 5).ToString());
-                    if (_question.Contains(range2)) _question = _question.Replace(range2, Random.Range(1, 10).ToString());
-                    if (_question.Contains(range3)) _question = _question.Replace(range3, Random.Range(10, 25).ToString());
+                    if (_question.Contains(range)) RangeProcessing();
                     break;
                 case 2:
                     _question = _dares[_id].String;
@@ -103,14 +106,49 @@ namespace Lastation.TOD
                         Debug.Log("Dare was forced by playermanager");
                     }
                     if (_question.Contains(localPlayer)) _question = _question.Replace(localPlayer, _player.displayName);
-                    if (_question.Contains(range1)) _question = _question.Replace(range1, Random.Range(1, 5).ToString());
-                    if (_question.Contains(range2)) _question = _question.Replace(range2, Random.Range(1, 10).ToString());
-                    if (_question.Contains(range3)) _question = _question.Replace(range3, Random.Range(10, 25).ToString());
+                    if (_question.Contains(range)) RangeProcessing();
                     break;
             }
             _UpdateQuestion();
         }
-        #endregion Set Question
+
+        public void RangeProcessing()
+        {
+
+            startRange = 0;
+            endRange = 0;
+            value = 0;
+            startIndex = _question.IndexOf(range);
+
+            if (startIndex != -1)
+            {
+                int _tmpIndex = startIndex + range.Length;
+
+                while (_tmpIndex < _question.Length && Char.IsDigit(_question[_tmpIndex]))
+                {
+                    startRange = startRange * 10 + (_question[_tmpIndex] - '0');
+                    _tmpIndex++;
+                }
+
+                _tmpIndex++;
+
+                while (_tmpIndex < _question.Length && Char.IsDigit(_question[_tmpIndex]))
+                {
+                    endRange = endRange * 10 + (_question[_tmpIndex] - '0');
+                    _tmpIndex++;
+                }
+
+                value = Random.Range(startRange, endRange + 1);
+
+                int endIndex = _question.IndexOf("]>", startIndex);
+                if (endIndex != -1)
+                {
+                    _question = _question.Remove(startIndex, endIndex - startIndex + 2);
+                    _question = _question.Insert(startIndex, value.ToString());
+                }
+            }
+        }
+        #endregion Set Question & Range Processing
 
         #region Update Question and Serialization
         private void _UpdateQuestion()
