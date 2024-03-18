@@ -26,9 +26,9 @@ namespace Lastation.TOD
         [Space]
 
         [Header("Game Settings")]
-        [SerializeField] private string randomPlayer = "<player>";
-        [SerializeField] private string localPlayer = "<local>";
-        [SerializeField] private string range = "<range[";
+        private string randomPlayer = "<player>";
+        private string localPlayer = "<local>";
+        private string range = "<range[";
 
 
         // Truth & Dares
@@ -44,6 +44,8 @@ namespace Lastation.TOD
         private int endRange;
         private int value;
         private int startIndex;
+        private int _tmpIndex;
+        private int endIndex;
 
         // Synced Data
         [UdonSynced] private string _question;
@@ -122,7 +124,7 @@ namespace Lastation.TOD
 
             if (startIndex != -1)
             {
-                int _tmpIndex = startIndex + range.Length;
+                _tmpIndex = startIndex + range.Length;
 
                 while (_tmpIndex < _question.Length && Char.IsDigit(_question[_tmpIndex]))
                 {
@@ -140,7 +142,7 @@ namespace Lastation.TOD
 
                 value = Random.Range(startRange, endRange + 1);
 
-                int endIndex = _question.IndexOf("]>", startIndex);
+                endIndex = _question.IndexOf("]>", startIndex);
                 if (endIndex != -1)
                 {
                     _question = _question.Remove(startIndex, endIndex - startIndex + 2);
